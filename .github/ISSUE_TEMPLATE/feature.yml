@@ -4,18 +4,26 @@ title: '[✨ Feature] '
 labels: ['✨ Feature']
 body:
   - type: textarea
-    id: bug-description
+    id: feat-description
     attributes:
       label: 📄 설명
       description: |
         새로운 기능에 대한 설명을 작성해 주세요.
-      placeholder: |
-        - [ ] 기능 설명 추가
-        - [ ] 기능 세부 사항 추가
+      placeholder: "여기에 설명을 작성하세요."
     validations:
       required: true
+  - type: markdown
+    id: feat-checklist
+    attributes:
+      label: 📋 체크리스트
+      description: |
+        아래 체크리스트를 작성해주세요.
+      value: |
+        - [ ] 기능 설명 추가
+        - [ ] 기능 세부 사항 추가
+        - [ ] 기능 구현 필요 사항 추가
   - type: textarea
-    id: bug-simulation
+    id: feat-simulation
     attributes:
       label: ✅ 해야 할 일
       description: |
@@ -25,7 +33,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: bug-more
+    id: feat-more
     attributes:
       label: 📝 메모
       description: 더 하고 싶은 말이 있다면 작성해 주세요.
