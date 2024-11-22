@@ -20,9 +20,9 @@ body:
       description: |
         아래 체크리스트를 작성해주세요.
       placeholder: |
-        - [ ] 기능 설명 추가<br>
-        - [ ] 기능 세부 사항 추가<br>
-        - [ ] 기능 구현 필요 사항 추가<br>
+        - [ ] 기능 설명 추가
+        - [ ] 기능 세부 사항 추가
+        - [ ] 기능 구현 필요 사항 추가
     validations:
       required: true
   - type: textarea
