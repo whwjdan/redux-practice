@@ -2,44 +2,49 @@ name: Set PR Title to Issue Title
 
 on:
   pull_request:
-    types: [opened, edited]
+    types: [opened, edited] # PR 생성 및 수정 시 실행
 
 jobs:
   update-pr-title:
-    runs-on: ubuntu-latest  # GitHub Actions는 리눅스 환경에서 실행됨
+    runs-on: ubuntu-latest
     steps:
-    - name: Check out repository
-      uses: actions/checkout@v3
+      # 1. 리포지토리 체크아웃
+      - name: Check out repository
+        uses: actions/checkout@v3
 
-    - name: Install GitHub CLI
-      run: sudo apt-get update && sudo apt-get install -y gh
+      # 2. GitHub CLI 설치
+      - name: Install GitHub CLI
+        run: sudo apt-get update && sudo apt-get install -y gh
 
-    - name: Authenticate GitHub CLI
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        echo "$GITHUB_TOKEN" | gh auth login --with-token
+      # 3. GitHub CLI 인증
+      - name: Authenticate GitHub CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
-    - name: Extract issue number from commit message
-      id: extract_issue_number
-      run: |
-        ISSUE_NUMBER=$(git log -1 --pretty=%B | grep -oE "#[0-9]+" | tr -d '#')
-        if [ -z "$ISSUE_NUMBER" ]; then
-          echo "No issue number found in commit message."
-          echo "::set-output name=found::false"
-        else
-          echo "::set-output name=found::true"
-          echo "::set-output name=issue_number::$ISSUE_NUMBER"
-        fi
+      # 4. PR 본문에서 이슈 번호 추출
+      - name: Extract issue number from PR body
+        id: extract_issue
+        run: |
+          ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oE "#[0-9]+" | tr -d '#')
+          if [ -z "$ISSUE_NUMBER" ]; then
+            echo "No issue number found in PR body."
+            echo "::set-output name=found::false"
+          else
+            echo "::set-output name=found::true"
+            echo "::set-output name=issue_number::$ISSUE_NUMBER"
+          fi
 
-    - name: Fetch issue title
-      if: steps.extract_issue_number.outputs.found == 'true'
-      id: fetch_issue_title
-      run: |
-        ISSUE_TITLE=$(gh issue view ${{ steps.extract_issue_number.outputs.issue_number }} --json title -q .title)
-        echo "::set-output name=title::$ISSUE_TITLE"
+      # 5. 이슈 제목 가져오기
+      - name: Fetch issue title
+        if: steps.extract_issue.outputs.found == 'true'
+        id: fetch_issue_title
+        run: |
+          ISSUE_TITLE=$(gh issue view ${{ steps.extract_issue.outputs.issue_number }} --json title -q .title)
+          echo "::set-output name=title::$ISSUE_TITLE"
 
-    - name: Update PR title
-      if: steps.extract_issue_number.outputs.found == 'true'
-      run: |
-        gh pr edit ${{ github.event.pull_request.number }} --title "${{ steps.fetch_issue_title.outputs.title }}"
+      # 6. PR 제목 업데이트
+      - name: Update PR title
+        if: steps.extract_issue.outputs.found == 'true'
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --title "${{ steps.fetch_issue_title.outputs.title }}"
