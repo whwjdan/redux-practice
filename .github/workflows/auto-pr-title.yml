@@ -1,39 +1,39 @@
-name: Auto PR Title with Issue Title
+name: Auto Update PR Title with Commit Issue Number
 
 on:
-  pull_request:
-    types: [opened, edited, synchronize]
+  push:
+    branches:
+      - main
+      - 'feature/*'  # 원하는 브랜치들
 
 jobs:
-  add-issue-title:
+  update-pr-title:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Get commit messages and extract issue number
+        id: get_commit_info
+        run: |
+          # 커밋 메시지에서 이슈 번호 추출
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MESSAGE"
+          ISSUE_NUMBER=$(echo "$COMMIT_MESSAGE" | grep -oP '#\d+' | head -n 1 | sed 's/#//')
+          echo "Issue Number: $ISSUE_NUMBER"
+          echo "::set-output name=issue_number::$ISSUE_NUMBER"
 
       - name: Get issue title and update PR title
         run: |
-          # 이슈 번호 추출
-          ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oP '#\d+' | head -n 1 | sed 's/#//')
-          echo "Issue Number: $ISSUE_NUMBER"  # 디버깅: 추출된 이슈 번호 확인
-
-          if [ -n "$ISSUE_NUMBER" ]; then
-            # GitHub API를 사용하여 이슈 제목 가져오기
+          if [ -n "${{ steps.get_commit_info.outputs.issue_number }}" ]; then
+            ISSUE_NUMBER=${{ steps.get_commit_info.outputs.issue_number }}
             ISSUE_TITLE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               "https://api.github.com/repos/${{ github.repository }}/issues/$ISSUE_NUMBER" | jq -r '.title')
-            echo "Issue Title: $ISSUE_TITLE"  # 디버깅: 가져온 이슈 제목 확인
-
-            # PR 제목 설정
             PR_TITLE="ISSUE #$ISSUE_NUMBER: $ISSUE_TITLE"
-            echo "Updating PR title to: $PR_TITLE"  # 디버깅: 설정된 PR 제목 확인
-
-            # PR 제목 업데이트 요청
-            RESPONSE=$(curl -X PATCH -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            echo "Updating PR title to: $PR_TITLE"
+            curl -X PATCH -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -d "{\"title\":\"$PR_TITLE\"}" \
-              "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}")
-
-            # 응답 내용 출력
-            echo "Response: $RESPONSE"
+              "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}"
           else
-            echo "No issue number found in PR body."  # 이슈 번호가 없을 경우
+            echo "No issue number found in commit message."
           fi
