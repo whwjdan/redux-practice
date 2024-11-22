@@ -12,13 +12,17 @@ body:
       placeholder: "여기에 설명을 작성하세요."
     validations:
       required: true
-  - type: markdown
+  - type: textarea
     id: feat-checklist
-    value: |
-      📋 체크리스트:
-      - [ ] 기능 설명 추가
-      - [ ] 기능 세부 사항 추가
-      - [ ] 기능 구현 필요 사항 추가
+    attributes:
+      label: 📋 체크리스트
+      description: |
+        아래 체크리스트를 작성해주세요.
+        - [ ] 기능 설명 추가
+        - [ ] 기능 세부 사항 추가
+        - [ ] 기능 구현 필요 사항 추가
+    validations:
+      required: true
   - type: textarea
     id: feat-simulation
     attributes:
