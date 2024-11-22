@@ -6,21 +6,28 @@ on:
 
 jobs:
   update-pr-title:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # GitHub Actions는 리눅스 환경에서 실행됨
     steps:
     - name: Check out repository
       uses: actions/checkout@v3
 
-    - name: Extract issue number from last commit message
+    - name: Install GitHub CLI
+      run: sudo apt-get update && sudo apt-get install -y gh
+
+    - name: Authenticate GitHub CLI
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "$GITHUB_TOKEN" | gh auth login --with-token
+
+    - name: Extract issue number from commit message
       id: extract_issue_number
       run: |
-        # Extract issue number from the last commit message
         ISSUE_NUMBER=$(git log -1 --pretty=%B | grep -oE "#[0-9]+" | tr -d '#')
         if [ -z "$ISSUE_NUMBER" ]; then
-          echo "No issue number found in the last commit message."
+          echo "No issue number found in commit message."
           echo "::set-output name=found::false"
         else
-          echo "Found issue number: $ISSUE_NUMBER"
           echo "::set-output name=found::true"
           echo "::set-output name=issue_number::$ISSUE_NUMBER"
         fi
@@ -30,7 +37,6 @@ jobs:
       id: fetch_issue_title
       run: |
         ISSUE_TITLE=$(gh issue view ${{ steps.extract_issue_number.outputs.issue_number }} --json title -q .title)
-        echo "Issue title: $ISSUE_TITLE"
         echo "::set-output name=title::$ISSUE_TITLE"
 
     - name: Update PR title
