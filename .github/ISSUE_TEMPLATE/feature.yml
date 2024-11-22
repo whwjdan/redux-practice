@@ -31,8 +31,8 @@ body:
       label: ✅ 해야 할 일
       description: |
         해야 할 일에 대한 Tasks를 작성해 주세요.
-        - [ ] 체크박스
-      placeholder: - [ ] 최대한 세분화해서 작성!
+      placeholder:  |
+        - [ ] 최대한 세분화 해서 작성<br>
     validations:
       required: true
   - type: textarea
