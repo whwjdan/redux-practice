@@ -32,7 +32,7 @@ body:
       description: |
         해야 할 일에 대한 Tasks를 작성해 주세요.
       placeholder:  |
-        - [ ] 최대한 세분화 해서 작성<br>
+        - [ ] 최대한 세분화 해서 작성
     validations:
       required: true
   - type: textarea
