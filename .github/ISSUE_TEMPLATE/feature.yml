@@ -9,9 +9,9 @@ body:
       label: 📄 설명
       description: |
         새로운 기능에 대한 설명을 작성해 주세요.
+      placeholder: |
         - [ ] 기능 설명 추가
         - [ ] 기능 세부 사항 추가
-      placeholder: 자세하게 작성하기!
     validations:
       required: true
   - type: textarea
