@@ -11,12 +11,17 @@ jobs:
     - name: Check out repository
       uses: actions/checkout@v3
 
-    - name: Get issue number from PR description
-      id: get_issue_number
+    - name: Extract issue number from PR branch or body
+      id: extract_issue_number
       run: |
+        # Extract issue number from PR body or branch name
         ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oE "#[0-9]+" | head -n 1 | tr -d '#')
         if [ -z "$ISSUE_NUMBER" ]; then
-          echo "No issue number found in PR description."
+          ISSUE_NUMBER=$(echo "${{ github.event.pull_request.head.ref }}" | grep -oE "[0-9]+")
+        fi
+
+        if [ -z "$ISSUE_NUMBER" ]; then
+          echo "No issue number found in PR description or branch name."
           echo "::set-output name=found::false"
         else
           echo "Found issue number: $ISSUE_NUMBER"
@@ -24,15 +29,15 @@ jobs:
           echo "::set-output name=issue_number::$ISSUE_NUMBER"
         fi
 
-    - name: Get issue title
-      if: steps.get_issue_number.outputs.found == 'true'
-      id: get_issue_title
+    - name: Fetch issue title
+      if: steps.extract_issue_number.outputs.found == 'true'
+      id: fetch_issue_title
       run: |
-        ISSUE_TITLE=$(gh issue view ${{ steps.get_issue_number.outputs.issue_number }} --json title -q .title)
+        ISSUE_TITLE=$(gh issue view ${{ steps.extract_issue_number.outputs.issue_number }} --json title -q .title)
         echo "Issue title: $ISSUE_TITLE"
         echo "::set-output name=title::$ISSUE_TITLE"
 
-    - name: Update PR title to match issue title
-      if: steps.get_issue_number.outputs.found == 'true'
+    - name: Update PR title
+      if: steps.extract_issue_number.outputs.found == 'true'
       run: |
-        gh pr edit ${{ github.event.pull_request.number }} --title "${{ steps.get_issue_title.outputs.title }}"
+        gh pr edit ${{ github.event.pull_request.number }} --title "${{ steps.fetch_issue_title.outputs.title }}"
