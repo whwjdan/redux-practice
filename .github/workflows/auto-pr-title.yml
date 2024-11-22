@@ -11,17 +11,13 @@ jobs:
     - name: Check out repository
       uses: actions/checkout@v3
 
-    - name: Extract issue number from PR branch or body
+    - name: Extract issue number from last commit message
       id: extract_issue_number
       run: |
-        # Extract issue number from PR body or branch name
-        ISSUE_NUMBER=$(echo "${{ github.event.pull_request.body }}" | grep -oE "#[0-9]+" | head -n 1 | tr -d '#')
+        # Extract issue number from the last commit message
+        ISSUE_NUMBER=$(git log -1 --pretty=%B | grep -oE "#[0-9]+" | tr -d '#')
         if [ -z "$ISSUE_NUMBER" ]; then
-          ISSUE_NUMBER=$(echo "${{ github.event.pull_request.head.ref }}" | grep -oE "[0-9]+")
-        fi
-
-        if [ -z "$ISSUE_NUMBER" ]; then
-          echo "No issue number found in PR description or branch name."
+          echo "No issue number found in the last commit message."
           echo "::set-output name=found::false"
         else
           echo "Found issue number: $ISSUE_NUMBER"
